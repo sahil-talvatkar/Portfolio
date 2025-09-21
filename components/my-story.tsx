@@ -1,21 +1,52 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
 import { Instagram, MessageCircle } from "lucide-react"
 
 export function MyStory() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setInView(entry.isIntersecting)
+        })
+      },
+      { threshold: 0.2 }
+    )
+
+    if (sectionRef.current) observer.observe(sectionRef.current)
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <section id="my-story" className="py-20 px-6 bg-black">
+    <section ref={sectionRef} id="my-story" className="py-20 px-6 bg-black">
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left side - Portrait image */}
-          <div className="relative">
+          <div
+            className={`relative transform transition-all duration-700 ease-out
+              ${inView ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0"}
+            `}
+            style={{ transitionDelay: inView ? "100ms" : "0ms" }}
+          >
             <img
-              src="/professional-portrait-of-young-indian-photographer.jpg"
+              src="/profilepic.jpg"
               alt="Raj Gawand Portrait"
-              className="w-full max-w-md mx-auto rounded-lg"
+              className="w-full max-w-md mx-auto rounded-lg shadow-lg shadow-amber-500/20"
             />
           </div>
 
           {/* Right side - Story content */}
-          <div className="text-white space-y-6">
+          <div
+            className={`text-white space-y-6 transform transition-all duration-700 ease-out
+              ${inView ? "translate-y-0 opacity-100" : "-translate-y-10 opacity-0"}
+            `}
+            style={{ transitionDelay: inView ? "300ms" : "0ms" }}
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-8">My Story</h2>
             <h3 className="text-xl font-semibold">Raj Gawand • Photographer</h3>
 
