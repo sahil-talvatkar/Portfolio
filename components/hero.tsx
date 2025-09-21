@@ -39,10 +39,10 @@ export function Hero() {
       <div
         ref={backgroundRef}
         className="absolute inset-0 z-0 will-change-transform"
-        style={{ height: "120%", top: "5%" }}
+        style={{ height: "120%", top: "8%" }}
       >
         <img
-          src="/back.jpg"
+          src="/myphoto.jpg"
           alt="Raj Gawand with camera"
           className="w-full h-full object-cover 
                      sm:object-cover md:object-cover 
