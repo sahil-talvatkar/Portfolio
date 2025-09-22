@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect,useRef } from "react"
 import GalleryHeader from "@/components/gallery-header"
 
 export default function PeopleStoriesPage() {
   const [scrollY, setScrollY] = useState(0)
+  const [inView, setInView] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
   const [popupImage, setPopupImage] = useState<string | null>(null)
   const [isZoomed, setIsZoomed] = useState(false) // For smooth zoom animation
 
@@ -14,19 +16,30 @@ export default function PeopleStoriesPage() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setInView(entry.isIntersecting)
+        })
+      },
+      { threshold: 0.2 }
+    )
+
+    if (sectionRef.current) observer.observe(sectionRef.current)
+
+    return () => observer.disconnect()
+  }, [])
+
+
   const peoplePhotos = [
-    { id: 1, src: "/colorful-indian-festival.jpg", title: "Festival Ceremony", description: "Traditional cultural ceremony by the water" },
-    { id: 2, src: "/traditional-indian-fair-photography.jpg", title: "Cultural Performers", description: "Traditional dancers in ceremonial attire" },
-    { id: 3, src: "/indian-wedding-ceremony-photography.jpg", title: "Henna Celebrations", description: "Beautiful henna art during festivities" },
-    { id: 4, src: "/event-photography-celebration.jpg", title: "Community Festival", description: "People celebrating together in unity" },
-    { id: 5, src: "/candid-people-photography.jpg", title: "Heritage Gathering", description: "Traditional costume celebration" },
-    { id: 6, src: "/street-photography-creative-shots.jpg", title: "Golden Hour Moments", description: "Serene moments captured at sunset" },
-    { id: 7, src: "/taj-mahal-monument-photography.jpg", title: "Cultural Heritage", description: "Preserving traditions through generations" },
-    { id: 8, src: "/miscellaneous-photography-subjects.jpg", title: "Community Bond", description: "People coming together in celebration" },
-    { id: 9, src: "/taj-mahal-monument-photography.jpg", title: "Cultural Heritage", description: "Preserving traditions through generations" },
-    { id: 10, src: "/miscellaneous-photography-subjects.jpg", title: "Community Bond", description: "People coming together in celebration" },
-    { id: 11, src: "/taj-mahal-monument-photography.jpg", title: "Cultural Heritage", description: "Preserving traditions through generations" },
-    { id: 12, src: "/miscellaneous-photography-subjects.jpg", title: "Community Bond", description: "People coming together in celebration" },
+    { id: 1, src: "/c1.jpg", title: "Festival Ceremony", description: "Traditional cultural ceremony by the water" },
+    { id: 2, src: "/c2.jpg", title: "Cultural Performers", description: "Traditional dancers in ceremonial attire" },
+    { id: 3, src: "/c3.jpg", title: "Henna Celebrations", description: "Beautiful henna art during festivities" },
+    { id: 4, src: "/c4.jpg", title: "Community Festival", description: "People celebrating together in unity" },
+    { id: 5, src: "/c5.jpg", title: "Heritage Gathering", description: "Traditional costume celebration" },
+    { id: 6, src: "/c6.jpg", title: "Golden Hour Moments", description: "Serene moments captured at sunset" },
+    { id: 7, src: "/c7.jpg", title: "Cultural Heritage", description: "Preserving traditions through generations" },
   ]
 
   const openPopup = (src: string) => {
@@ -91,13 +104,15 @@ export default function PeopleStoriesPage() {
       </div>
 
       {/* Gallery Section */}
-      <div className="px-6 py-12 bg-gradient-to-b from-gray-900/50 to-black/80">
+      <div ref={sectionRef} className="px-6 py-12 bg-gradient-to-b from-gray-900/50 to-black/80">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
-            {peoplePhotos.map((photo) => (
+            {peoplePhotos.map((photo,index) => (
               <div
                 key={photo.id}
-                className="group cursor-pointer aspect-square relative overflow-hidden rounded-xl bg-gray-800/50 backdrop-blur-sm shadow-2xl hover:shadow-3xl border border-gray-700/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:border-gray-600/70"
+                className={`group cursor-pointer aspect-square relative overflow-hidden rounded-xl bg-gray-800/50 backdrop-blur-sm shadow-2xl hover:shadow-3xl border border-gray-700/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:border-gray-600/70
+                ${inView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
                 onClick={() => openPopup(photo.src)}
               >
                 <img

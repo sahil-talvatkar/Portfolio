@@ -1,16 +1,36 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect,useRef } from "react"
 import GalleryHeader from "@/components/gallery-header"
 
 export default function WeddingPage() {
   const [scrollY, setScrollY] = useState(0)
+  const [inView, setInView] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [popupImage, setPopupImage] = useState<string | null>(null)
+  const [isZoomed, setIsZoomed] = useState(false) // For smooth zoom animation
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setInView(entry.isIntersecting)
+        })
+      },
+      { threshold: 0.2 }
+    )
+
+    if (sectionRef.current) observer.observe(sectionRef.current)
+
+    return () => observer.disconnect()
+  }, [])
+
 
   const weddingPhotos = [
     {
@@ -62,6 +82,17 @@ export default function WeddingPage() {
       description: "Traditional wedding banquet",
     },
   ]
+
+  const openPopup = (src: string) => {
+    setPopupImage(src)
+    setIsZoomed(true)
+  }
+
+  const closePopup = () => {
+    setIsZoomed(false)
+    setTimeout(() => setPopupImage(null), 200) // Delay to allow zoom-out animation
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
@@ -116,28 +147,26 @@ export default function WeddingPage() {
         </div>
       </div>
 
-      <div className="px-6 py-12 bg-gradient-to-b from-gray-900/50 to-black/80">
+     <div ref={sectionRef} className="px-6 py-12 bg-gradient-to-b from-gray-900/50 to-black/80">
         <div className="max-w-7xl mx-auto">
-          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
-            {weddingPhotos.map((photo, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
+            {weddingPhotos.map((photo,index) => (
               <div
                 key={photo.id}
-                className="break-inside-avoid mb-3 md:mb-4 group cursor-pointer"
-                style={{
-                  aspectRatio: index % 4 === 0 ? "3/4" : index % 4 === 1 ? "4/3" : index % 4 === 2 ? "1/1" : "4/5",
-                }}
+                className={`group cursor-pointer aspect-square relative overflow-hidden rounded-xl bg-gray-800/50 backdrop-blur-sm shadow-2xl hover:shadow-3xl border border-gray-700/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:border-gray-600/70
+                ${inView ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                onClick={() => openPopup(photo.src)}
               >
-                <div className="relative overflow-hidden rounded-xl bg-gray-800/50 backdrop-blur-sm shadow-2xl hover:shadow-3xl border border-gray-700/50 transition-all duration-300 group-hover:scale-[1.02] group-hover:border-gray-600/70">
-                  <img
-                    src={photo.src || "/placeholder.svg"}
-                    alt={photo.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 right-2 md:right-4">
-                      <h3 className="text-white font-semibold text-sm md:text-lg mb-1">{photo.title}</h3>
-                      <p className="text-gray-200 text-xs md:text-sm">{photo.description}</p>
-                    </div>
+                <img
+                  src={photo.src || "/placeholder.svg"}
+                  alt={photo.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 right-2 md:right-4">
+                    <h3 className="text-white font-semibold text-sm md:text-lg mb-1">{photo.title}</h3>
+                    <p className="text-gray-200 text-xs md:text-sm">{photo.description}</p>
                   </div>
                 </div>
               </div>
@@ -145,6 +174,55 @@ export default function WeddingPage() {
           </div>
         </div>
       </div>
+
+      {popupImage && (
+        <div
+          className="fixed inset-0 bg-black/70 flex justify-center items-center z-50"
+          onClick={closePopup}
+        >
+          <div
+            className={`relative transition-transform duration-200 ${isZoomed ? "scale-100" : "scale-0"}`}
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside image box
+          >
+            {/* Close button */}
+            <button
+              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 z-50"
+              onClick={closePopup}
+            >
+              ✕
+            </button>
+
+            {/* Image */}
+            <img
+              src={popupImage}
+              alt="Popup"
+              className="max-w-[90vw] max-h-[80vh] rounded-xl shadow-2xl"
+            />
+
+            {/* Action icons */}
+            <div className="absolute bottom-2 right-2 flex gap-2">
+              {/* Download */}
+              <a
+                href={popupImage}
+                download
+                className="bg-black/50 hover:bg-black/80 text-white p-2 rounded-full"
+                title="Download"
+              >
+                ⬇️
+              </a>
+
+              {/* Fullscreen */}
+              <button
+                className="bg-black/50 hover:bg-black/80 text-white p-2 rounded-full"
+                onClick={() => window.open(popupImage, "_blank")}
+                title="View Fullscreen"
+              >
+                ⬜
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
